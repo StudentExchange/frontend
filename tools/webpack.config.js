@@ -11,6 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
 import WebpackAssetsManifest from 'webpack-assets-manifest';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import nodeExternals from 'webpack-node-externals';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import overrideRules from './lib/overrideRules';
@@ -122,9 +123,41 @@ const config = {
         },
       },
 
+      // trun off css-modules on antd css files
+      {
+        test: /\.less$/,
+        include: [/[\\/]node_modules[\\/].*antd/],
+        use: [
+          MiniCssExtractPlugin.loader,
+          // 'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: isDebug,
+              minimize: isDebug ? false : minimizeCssOptions,
+            },
+          },
+          {
+            loader: 'postcss-loader',
+            options: {
+              config: {
+                path: './tools/postcss.config.js',
+              },
+            },
+          },
+          {
+            loader: 'less-loader',
+            options: {
+              javascriptEnabled: true,
+            },
+          },
+        ],
+      },
+
       // Rules for Style Sheets
       {
         test: reStyle,
+        exclude: [/[\\/]node_modules[\\/].*antd/],
         rules: [
           // Convert CSS into JS module
           {
@@ -310,6 +343,10 @@ const clientConfig = {
       __DEV__: isDebug,
     }),
 
+    new MiniCssExtractPlugin({
+      filename: `styles/[name].css`,
+    }),
+
     // Emit a file with assets paths
     // https://github.com/webdeveric/webpack-assets-manifest#options
     new WebpackAssetsManifest({
@@ -419,21 +456,20 @@ const serverConfig = {
           ...rule,
           options: {
             ...rule.options,
-            presets: rule.options.presets.map(
-              preset =>
-                preset[0] !== '@babel/preset-env'
-                  ? preset
-                  : [
-                      '@babel/preset-env',
-                      {
-                        targets: {
-                          node: pkg.engines.node.match(/(\d+\.?)+/)[0],
-                        },
-                        modules: false,
-                        useBuiltIns: false,
-                        debug: false,
+            presets: rule.options.presets.map(preset =>
+              preset[0] !== '@babel/preset-env'
+                ? preset
+                : [
+                    '@babel/preset-env',
+                    {
+                      targets: {
+                        node: pkg.engines.node.match(/(\d+\.?)+/)[0],
                       },
-                    ],
+                      modules: false,
+                      useBuiltIns: false,
+                      debug: false,
+                    },
+                  ],
             ),
           },
         };
@@ -494,5 +530,11 @@ const serverConfig = {
     __dirname: false,
   },
 };
+
+// Only use babel-plugin-import in client side
+clientConfig.module.rules[0].options.plugins = [
+  ...clientConfig.module.rules[0].options.plugins,
+  ['import', { libraryName: 'antd', style: true }],
+];
 
 export default [clientConfig, serverConfig];
