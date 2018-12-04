@@ -9,7 +9,9 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
+import Media from 'react-media';
 
 // external-global styles must be imported in your JS.
 import normalizeCss from 'normalize.css';
@@ -24,6 +26,7 @@ class Layout extends React.Component {
   };
 
   render() {
+    console.log(this.props.isMobile); // eslint-disable-line
     return (
       <div>
         <Header />
@@ -35,4 +38,25 @@ class Layout extends React.Component {
   }
 }
 
-export default withStyles(normalizeCss, s)(Layout);
+Layout.defaultProps = {
+  isMobile: false,
+};
+
+Layout.propTypes = {
+  isMobile: PropTypes.bool,
+};
+
+const mapState = () => ({});
+
+const mapDispatch = {};
+
+export default withStyles(normalizeCss, s)(
+  connect(
+    mapState,
+    mapDispatch,
+  )(props => (
+    <Media query="(max-width: 599px)">
+      {isMobile => <Layout {...props} isMobile={isMobile} />}
+    </Media>
+  )),
+);
