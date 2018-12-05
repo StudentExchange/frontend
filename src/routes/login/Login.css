@@ -102,16 +102,6 @@
   background: #c23321;
 }
 
-.twitter {
-  border-color: #55acee;
-  background: #55acee;
-  composes: button;
-}
-
-.twitter:hover {
-  background: #2795e9;
-}
-
 .icon {
   display: inline-block;
   margin: -2px 12px -2px 0;
