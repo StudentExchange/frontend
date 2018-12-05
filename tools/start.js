@@ -217,6 +217,10 @@ async function start() {
       {
         // https://www.browsersync.io/docs/options
         server: 'src/server.js',
+        https: {
+          key: 'server.key',
+          cert: 'server.cert',
+        },
         middleware: [server],
         open: !process.argv.includes('--silent'),
         ...(isDebug ? {} : { notify: false, ui: false }),
